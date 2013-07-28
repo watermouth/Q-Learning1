@@ -1,0 +1,88 @@
+.PHONY: all clean test
+########################################################################
+# OCAML CONFIGURATION.
+# DELETE THIS SECTION IF YOU ARE NOT BUILDING OCAML FILES.
+#
+
+SRC_DIR = $(dir src)
+TEST_DIR = $(dir test)
+
+################################################
+# CONFIGURATION.  YOU MAY WANT TO MODIFY ANY OF THESE CONFIGURATION
+# VARIABLES.
+#
+
+#
+# THIS PROJECT REQUIRES OCAMLFIND (DEFAULT - FALSE).
+#
+USE_OCAMLFIND = TRUE
+#
+OCAMLPACKS[] =
+  batteries 
+#    PACK2
+#
+
+#
+# INCLUDE PATH
+#
+# OCAMLINCLUDES +=
+
+#
+# COMPILE NATIVE OR BYTE CODE? 
+#
+# THE DEFAULT VALUES ARE DEFINED AS FOLLOWS:
+#
+NATIVE_ENABLED = $(OCAMLOPT_EXISTS)
+# BYTE_ENABLED = $(NOT $(OCAMLOPT_EXISTS))
+
+#
+# VARIOUS OPTIONS
+#
+# OCAMLFLAGS    +=
+# OCAMLCFLAGS   +=
+# OCAMLOPTFLAGS +=
+# OCAML_LINK_FLAGS +=
+# OCAML_BYTE_LINK_FLAGS +=
+# OCAML_NATIVE_LINK_FLAGS +=
+
+################################################
+# GENERATED FILES
+#
+# WORKAROUND FOR THE FACT THAT OCAMLDEP DOES NOT PAY ATTENTION TO .MLL
+# AND .MLY FILES.
+#
+# OCAMLGENERATEDFILES(PARSER.ML LEXER.ML)
+
+FILES[] = $(removesuffix $(filter %.ml %.mli, $(ls R, $(SRC_DIR))))
+echo $(FILES)
+#    FILE1
+#    FILE2
+#
+LIBRARY = mainlib
+# OCAML_LIBS +=
+# OCAML_CLIBS +=
+# OCAML_OTHER_LIBS +=
+# OCAML_LIB_FLAGS +=
+#
+.DEFAULT: $(OCamlLibrary $(LIBRARY), $(FILES))
+
+TEST_PROGRAM = unittest_main
+TEST_FILES[] = $(FILES) $(removesuffix $(filter %.ml %.mli, $(ls R, $(TEST_DIR))))
+OCAMLINCLUDES += $(SRC_DIR)  # なぜかsectionの下だとだめ
+echo $(TEST_FILES)
+echo $(LIBRARY)
+section
+  echo $(OCAMLINCLUDES)
+  OCAML_LIBS += $(LIBRARY)
+  OCamlProgram($(TEST_PROGRAM), $(TEST_FILES))
+
+test: $(TEST_PROGRAM)
+  ./$(TEST_PROGRAM)
+
+clean:
+  rm -f $(filter-proper-targets $(ls R, .))
+
+.SUBDIRS: $(SRC_DIR) $(TEST_DIR)
+  if $(file-exists OMakefile)
+    include OMakefile
+
