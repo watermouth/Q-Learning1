@@ -45,11 +45,31 @@ let constant_decision ~(constant:int)
   ~(price_sell:float) ~(price_buy:float) ~(inventory:int) ~(demand:int) =
   constant
 
+let predefined_decision ~(decisions:int array) () = 
+  (*~(price_sell:float) ~(price_buy:float) ~(inventory:int) ~(demand:int) =*)
+  let index = ref 0 in
+  let f = fun ~(price_sell:float) ~(price_buy:float) ~(inventory:int) ~(demand:int) -> 
+    let value = decisions.(!index) in
+    index := !index + 1;
+    Printf.printf "index = %d\n" !index;
+    value 
+  in f
+
 (* sample execution *)
 ;;
+Random.init 100;;
 let decision_rule_1 = constant_decision ~constant:5 ;;
 let time_steps = 10 ;;
 let demands_sample_1 = (Array.init time_steps (fun i -> (demand ~max_value:10 ()))) ;;
 let (inventories, contributions) =
-  batch_simulation time_steps 0 demands_sample_1 (Array.create time_steps 101.0) (Array.create time_steps 100.0) decision_rule_1;;
+  batch_simulation time_steps 10 demands_sample_1 (Array.create time_steps 101.0) (Array.create time_steps 100.0) decision_rule_1;;
+let value1_at_0 = Array.reduce (fun i j -> i +. j) contributions;;
+
+Random.init 100;;
+let demands_sample_2 = (Array.init time_steps (fun i -> if i < ((Array.length demands_sample_1) - 1)
+    then demands_sample_1.(i+1) else 0));;
+let decision_rule_2 = predefined_decision ~decisions:demands_sample_2 ()
+let (inventories2, contributions2) =
+  batch_simulation time_steps 10 demands_sample_1 (Array.create time_steps 101.0) (Array.create time_steps 100.0) decision_rule_2;;
+let value2_at_0 = Array.reduce (fun i j -> i +. j) contributions2;;
 
