@@ -1,5 +1,5 @@
-open Batteries
 #use "src/qlearning.ml"
+open Batteries
 (* models *)
 let transition ~(inventory:int) ~(demand:int) ~(purchase:int) =
   inventory - (min inventory demand) + purchase
@@ -71,12 +71,12 @@ let predefined_decision ~(decisions:int array) () =
 ;;
 (* Random.init 100;; *)
 let time_steps = 100000 ;;
-let maximum_inventory = 1000;;
-let maximum_purchase = 10;;
-let initial_inventory = 0;;
-let gamma = 0.9;;
-let decision_rule_1 = constant_decision ~constant:1;;
-let demands_sample_1 = (Array.init time_steps (fun i -> (demand ~max_value:3 ()) mod 10)) ;;
+let maximum_inventory = 200;;
+let maximum_purchase = 9;;
+let initial_inventory= 10;;
+let gamma = 0.999 ;; 
+let decision_rule_1 = constant_decision ~constant:4;;
+let demands_sample_1 = (Array.init time_steps (fun i -> (demand ~max_value:15 ()) mod 15)) ;;
 let (inventories, contributions) =
   batch_simulation time_steps initial_inventory demands_sample_1 (Array.create time_steps 101.0) (Array.create time_steps 100.0) decision_rule_1;;
 let value1_at_0 = Array.reduce (fun i j -> i +. (gamma *. j)) contributions;;
@@ -88,10 +88,10 @@ let (inventories2, contributions2) =
   batch_simulation time_steps initial_inventory demands_sample_1 (Array.create time_steps 101.0) (Array.create time_steps 100.0) decision_rule_2;;
 let value2_at_0 = Array.reduce (fun i j -> i +. (gamma *. j)) contributions2;;
 
-let q_table = create_q_table ~state_size:maximum_inventory ~action_size:maximum_purchase ~initial_value:0.0;; 
+let q_table = create_q_table ~state_size:maximum_inventory ~action_size:maximum_purchase ~initial_value:10.0;; 
 let (inventories3, contributions3) =
   batch_simulation_q_learning ~max_purchase:maximum_purchase
-  ~epsilon:0.2 ~gamma ~alpha:0.05 ~batch_size:time_steps 
+  ~epsilon:0.1 ~gamma ~alpha:0.5 ~batch_size:time_steps 
   ~initial_inventory ~demands:demands_sample_1
   ~price_sell:(Array.create time_steps 101.0)
   ~price_buy:(Array.create time_steps 100.0)

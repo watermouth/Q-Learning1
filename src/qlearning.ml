@@ -7,10 +7,11 @@ let create_q_table ~(state_size:int) ~(action_size:int) ~(initial_value:float)
 let decide_with_q_table ~(q_table:(float array array))
   ~(price_sell:float) ~(price_buy:float) ~(inventory:int) ~(demand:int)
   =
+  let index = ref 0 in
   let max_value = ref (-1.) in
-  let index = Array.findi (fun x -> if x > !max_value
-              then (max_value := x; true) else false ) q_table.(inventory) 
-  in index
+  Array.iteri (fun i x -> if x > !max_value 
+               then (max_value := x; index := i) else () ) q_table.(inventory); 
+  !index
 
 let batch_simulation_q_learning
   ?(epsilon=0.1) ?(gamma=1.0) ?(alpha=0.9)
@@ -34,9 +35,13 @@ let batch_simulation_q_learning
 (*
   Printf.printf "here ? ;;\n";
 *)
-    let action = if ((Random.float 1.0) > epsilon)
-      then decision_fun price_sell.(i-1)(*dummy*) price_buy.(i-1)(*dummy*) inventory.(i) demands.(i-1)(*dummy*)
-      else (Random.int max_purchase) in
+    let action = if ((Random.float 1.0) < epsilon)
+      then (Random.int max_purchase)
+      else decide_with_q_table q_table price_sell.(i-1)(*dummy*) price_buy.(i-1)(*dummy*) inventory.(i-1) demands.(i-1)(*dummy*)
+    in
+    Printf.printf "inventory:%d,\taction:%d\n" inventory.(i-1) action;
+(*
+*)
     let (temp1, temp2) =
       (simulate2 inventory.(i-1) demands.(i-1) price_sell.(i-1)
        price_buy.(i-1) action) in
@@ -46,7 +51,10 @@ let batch_simulation_q_learning
     Printf.printf "%d inventory %d, contribution %f\n" i temp1 temp2;
 *)
     (* q learning *)
-    let q = temp2 +. gamma *. (float_of_int (action)) in
+    let action_for_next_state = 
+      decide_with_q_table q_table price_sell.(i)(*dummy*) price_buy.(i)(*dummy*) inventory.(i) demands.(i)(*dummy*)
+    in
+    let q = temp2 +. gamma *. q_table.(inventory.(i)).(action_for_next_state) in 
     q_table.(inventory.(i-1)).(action) <- 
       (1.0 -. alpha) *. q_table.(inventory.(i-1)).(action) +.
       (alpha *. q);
