@@ -1,4 +1,4 @@
-.PHONY: all clean test
+.PHONY: all clean test byte
 ########################################################################
 # OCAML CONFIGURATION.
 # DELETE THIS SECTION IF YOU ARE NOT BUILDING OCAML FILES.
@@ -19,6 +19,7 @@ USE_OCAMLFIND = TRUE
 #
 OCAMLPACKS[] =
   batteries 
+  calendar
 #    PACK2
 #
 
@@ -33,7 +34,7 @@ OCAMLPACKS[] =
 # THE DEFAULT VALUES ARE DEFINED AS FOLLOWS:
 #
 NATIVE_ENABLED = $(OCAMLOPT_EXISTS)
-# BYTE_ENABLED = $(NOT $(OCAMLOPT_EXISTS))
+#BYTE_ENABLED = true 
 
 #
 # VARIOUS OPTIONS
@@ -54,17 +55,18 @@ NATIVE_ENABLED = $(OCAMLOPT_EXISTS)
 # OCAMLGENERATEDFILES(PARSER.ML LEXER.ML)
 
 FILES[] = $(removesuffix $(filter %.ml %.mli, $(ls R, $(SRC_DIR))))
-echo $(FILES)
-#    FILE1
-#    FILE2
-#
-LIBRARY = mainlib
+LIBRARY = $(file lib/libmain)
 # OCAML_LIBS +=
 # OCAML_CLIBS +=
 # OCAML_OTHER_LIBS +=
 # OCAML_LIB_FLAGS +=
 #
+
 .DEFAULT: $(OCamlLibrary $(LIBRARY), $(FILES))
+
+byte:
+  NATIVE_ENABLED = false
+  BYTE_ENABLED = true
 
 TEST_PROGRAM = unittest_main
 TEST_FILES[] = $(FILES) $(removesuffix $(filter %.ml %.mli, $(ls R, $(TEST_DIR))))

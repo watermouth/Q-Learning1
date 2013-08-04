@@ -1,4 +1,6 @@
+(*
 #use "src/qlearning.ml"
+*)
 open Batteries
 (* models *)
 let transition ~(inventory:int) ~(demand:int) ~(purchase:int) =
@@ -9,7 +11,8 @@ let contribution ~(inventory:int) ~(demand:int) ~(purchase:int)
   price_sell *. (float (min inventory demand))
   -. price_buy *. (float purchase)
 
-let demand ~(max_value:int) () = Random.int max_value 
+let demand ~(max_value:int) () =
+  max 5 (Random.int max_value) 
 
 (*  ~(decision_fun:(float -> float -> int -> int -> int)) =*)
 let simulate ~(inventory:int) ~(demand:int) ~(price_sell:float) ~(price_buy:float)
@@ -29,6 +32,7 @@ let simulate2 ~(inventory:int) ~(demand:int) ~(price_sell:float) ~(price_buy:flo
   (inventory_value, contribution_value)
 
 let batch_simulation
+  ~(do_print:bool)
   ~(batch_size:int) ~(initial_inventory:int)
   ~(demands: int array) ~(price_sell:float array) ~(price_buy:float array)
   ~(decision_fun:(price_sell:float -> price_buy:float -> inventory:int -> demand:int -> int))
@@ -44,12 +48,16 @@ let batch_simulation
   let inventory = Array.create batch_size initial_inventory in
   let contribution = Array.create batch_size 0.0 in
   for i=1 to (batch_size-1) do
+    let action = decision_fun price_sell.(i-1) price_buy.(i-1) inventory.(i-1) demands.(i-1) in 
     let (temp1, temp2) =
-      (simulate inventory.(i-1) demands.(i-1) price_sell.(i-1)
-       price_buy.(i-1) decision_fun) in
+      (simulate2 inventory.(i-1) demands.(i-1) price_sell.(i-1)
+       price_buy.(i-1) action) in
     inventory.(i) <- temp1;
     contribution.(i-1) <- temp2; 
-    ()
+    if do_print then
+      Printf.printf "%d inventory:%d\t, demand:%d\t, action:%d\t, contribution:\t%f\n" i inventory.(i-1) demands.(i-1) action temp2
+    else ()
+    ;
   done;
   (inventory, contribution)
 
@@ -67,34 +75,15 @@ let predefined_decision ~(decisions:int array) () =
     value 
   in f
 
-(* sample execution *)
-;;
-(* Random.init 100;; *)
-let time_steps = 100000 ;;
-let maximum_inventory = 200;;
-let maximum_purchase = 9;;
-let initial_inventory= 10;;
-let gamma = 0.999 ;; 
-let decision_rule_1 = constant_decision ~constant:4;;
-let demands_sample_1 = (Array.init time_steps (fun i -> (demand ~max_value:15 ()) mod 15)) ;;
-let (inventories, contributions) =
-  batch_simulation time_steps initial_inventory demands_sample_1 (Array.create time_steps 101.0) (Array.create time_steps 100.0) decision_rule_1;;
-let value1_at_0 = Array.reduce (fun i j -> i +. (gamma *. j)) contributions;;
+let reduce_contributions ~(gamma:float) ~(contributions:float array) =
+  let rec sub gamma contributions value =
+    let size = (Array.length contributions) - 1 in 
+    let value = value +. contributions.(0) in
+    if size = 0 then value 
+    else if size < 0 then 0.0
+    else 
+      let sub_contributions =
+        (Array.map (fun x -> x *. gamma) (Array.sub contributions 1 size)) in
+      sub gamma sub_contributions value
+  in sub gamma contributions 0.0
 
-let cheat = (Array.init time_steps (fun i -> if i < ((Array.length demands_sample_1) - 1)
-  then demands_sample_1.(i+1) else 0));;
-let decision_rule_2 = predefined_decision ~decisions:cheat ()
-let (inventories2, contributions2) =
-  batch_simulation time_steps initial_inventory demands_sample_1 (Array.create time_steps 101.0) (Array.create time_steps 100.0) decision_rule_2;;
-let value2_at_0 = Array.reduce (fun i j -> i +. (gamma *. j)) contributions2;;
-
-let q_table = create_q_table ~state_size:maximum_inventory ~action_size:maximum_purchase ~initial_value:10.0;; 
-let (inventories3, contributions3) =
-  batch_simulation_q_learning ~max_purchase:maximum_purchase
-  ~epsilon:0.1 ~gamma ~alpha:0.5 ~batch_size:time_steps 
-  ~initial_inventory ~demands:demands_sample_1
-  ~price_sell:(Array.create time_steps 101.0)
-  ~price_buy:(Array.create time_steps 100.0)
-  ~q_table ;;
-let value3_at_0 = Array.reduce (fun i j -> i +. (gamma *. j)) contributions3;;
-Printf.printf "%f, %f, %f" value1_at_0 value2_at_0 value3_at_0;;
