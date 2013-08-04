@@ -1,8 +1,8 @@
 open Model;;
 
-let create_q_table ~(state_size:int) ~(action_size:int) ~(initial_value:float)
+let create_q_table ~(state_size:int) ~(action_size:int) ~(init_func)
   = Array.init state_size 
-    (fun i -> (Array.make action_size initial_value))
+    (fun i -> (Array.init action_size init_func))
 
 let decide_with_q_table ~(q_table:(float array array))
   ~(price_sell:float) ~(price_buy:float) ~(inventory:int) ~(demand:int)
@@ -45,8 +45,6 @@ let batch_simulation_q_learning
       Printf.printf "%d inventory:%d\t, demand:%d\t, action:%d%s\t, contribution:\t%f\n" i inventory.(i-1) demands.(i-1) action !event_string temp2
     else ()
     ;
-(*
-*)
     (* q learning *)
     let action_for_next_state = 
       decide_with_q_table q_table price_sell.(i)(*dummy*) price_buy.(i)(*dummy*) inventory.(i) demands.(i)(*dummy*)

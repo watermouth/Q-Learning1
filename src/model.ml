@@ -45,8 +45,8 @@ let batch_simulation
   else
     (); 
   (* loop *)
-  let inventory = Array.create batch_size initial_inventory in
-  let contribution = Array.create batch_size 0.0 in
+  let inventory = Array.make batch_size initial_inventory in
+  let contribution = Array.make batch_size 0.0 in
   for i=1 to (batch_size-1) do
     let action = decision_fun price_sell.(i-1) price_buy.(i-1) inventory.(i-1) demands.(i-1) in 
     let (temp1, temp2) =

@@ -13,9 +13,9 @@ let gamma = (float_of_string Sys.argv.(2));;
 let epsilon = (float_of_string Sys.argv.(3));;
 let alpha = (float_of_string Sys.argv.(4));;
 let do_print = (bool_of_string Sys.argv.(5));;
-let maximum_inventory = 500;;
+let maximum_inventory = 1000;;
 let maximum_purchase = 9;;
-let initial_inventory= 0;;
+let initial_inventory= 10;;
 let price_sells = (Array.create time_steps 200.0);;
 let price_buys  = (Array.create time_steps 100.0);;
 let demands_sample_1 = (Array.init time_steps (fun i -> (demand ~max_value:maximum_purchase ()))) ;;
@@ -36,7 +36,12 @@ Printf.printf "\n";;
 
 (* decision rule 3 *)
 let contributions3 = Array.init 10 (fun i -> 0.0);;
-let q_table = create_q_table ~state_size:maximum_inventory ~action_size:maximum_purchase ~initial_value:10.0;; 
+let q_table = create_q_table ~state_size:maximum_inventory ~action_size:maximum_purchase
+  ~init_func:(fun i -> 0.0);;
+q_table.(0) <- Array.init maximum_purchase (fun i -> 0.01 *. (float i));;
+(*
+  ~init_func:(fun i -> if i > (maximum_purchase / 2) then 0.0 else 0.01 *. (float i));; 
+*)
 let (inventories3, contributions3) =
   batch_simulation_q_learning ~max_purchase:maximum_purchase
   ~do_print ~epsilon ~gamma ~alpha ~batch_size:time_steps 
