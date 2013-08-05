@@ -14,7 +14,7 @@ let decide_with_q_table ~(q_table:(float array array))
   !index
 
 let batch_simulation_q_learning
-  ?(do_print=false) ?(epsilon=0.1) ?(gamma=1.0) ?(alpha=0.9)
+  ?(do_print=false) ?(epsilon=0.1) ?(gamma=1.0) ~(alpha: unit -> float) 
   ~(max_purchase:int)
   ~(batch_size:int) ~(initial_inventory:int)
   ~(demands:int array) ~(price_sell:float array) ~(price_buy:float array)
@@ -50,9 +50,10 @@ let batch_simulation_q_learning
       decide_with_q_table q_table price_sell.(i)(*dummy*) price_buy.(i)(*dummy*) inventory.(i) demands.(i)(*dummy*)
     in
     let q = temp2 +. gamma *. q_table.(inventory.(i)).(action_for_next_state) in 
+    let alpha_value = alpha () in
     q_table.(inventory.(i-1)).(action) <- 
-      (1.0 -. alpha) *. q_table.(inventory.(i-1)).(action) +.
-      (alpha *. q);
+      (1.0 -. alpha_value) *. q_table.(inventory.(i-1)).(action) +.
+      (alpha_value *. q);
     ()
   done;
   (inventory, contribution)
