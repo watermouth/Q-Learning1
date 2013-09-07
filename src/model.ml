@@ -11,9 +11,6 @@ let contribution ~(inventory:int) ~(demand:int) ~(purchase:int)
   price_sell *. (float (min inventory demand))
   -. price_buy *. (float purchase)
 
-let demand ~(max_value:int) () =
-  max 5 (Random.int max_value) 
-
 (*  ~(decision_fun:(float -> float -> int -> int -> int)) =*)
 let simulate ~(inventory:int) ~(demand:int) ~(price_sell:float) ~(price_buy:float)
   ~(decision_fun:(price_sell:float -> price_buy:float -> inventory:int -> demand:int -> int)) =

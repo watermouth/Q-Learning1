@@ -25,10 +25,11 @@ let maximum_purchase = 9;;
 let initial_inventory= 0;;
 let price_sells = (Array.create time_steps 200.0);;
 let price_buys  = (Array.create time_steps 100.0);;
+let demand ~(max_value:int) () = (Random.int max_value);; 
 let demands_sample_1 = (Array.init time_steps (fun i -> (demand ~max_value:maximum_purchase ()))) ;;
 
 (* decision rule 1 *)
-let decision_rule_1 = constant_decision ~constant:(maximum_purchase / 2 + 1);;
+let decision_rule_1 = constant_decision ~constant:(maximum_purchase / 2 );;
 let (inventories, contributions) =
   batch_simulation do_print time_steps initial_inventory demands_sample_1 price_sells price_buys decision_rule_1;;
 Printf.printf "\n";;
@@ -66,9 +67,10 @@ let value2_at_0 = reduce_contributions gamma contributions2;;
 let value3_at_0 = reduce_contributions gamma contributions3;; 
 *)
 Printf.printf "\n%f, %f, %f\n" value1_at_0 value2_at_0 value3_at_0;;
+
+(* *)
 (*
-これで一定ルール(maximum_purchase / 2)に勝てる場合が出てくる
-let alpha () = alpha_max;;
-time ./unittest_main 30000 1 0.2 0.75 true
-6割くらいのalphaにするとダメ.
+ let alpha () = alpha_max;;
+ time ./unittest_main 30000 1 0.2 0.75 true
+ time ./unittest_main 30000 0.9 0.2 0.7 true
 *)
